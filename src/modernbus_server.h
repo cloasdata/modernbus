@@ -262,7 +262,7 @@ class ModbusServer{
             return *response;
         };
 
-        ModbusExceptionResponse<T>& setOnExceptionHandler(ExceptionHandler<T> handler){
+        ModbusExceptionResponse<T>& setOnError(ExceptionHandler<T> handler){
             _exceptionResponse = ModbusExceptionResponse<T>{
                 _slaveAddress,
                 handler,

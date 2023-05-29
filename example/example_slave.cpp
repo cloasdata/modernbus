@@ -48,7 +48,7 @@ void setup(){
     });
 
     // interfere exception handling:
-    server.setOnExceptionHandler([](ModbusExceptionResponse<ProviderType> *response){
+    server.setOnError([](ModbusExceptionResponse<ProviderType> *response){
         Serial.print("Exception:\n");
         Serial.printf("Error: %d\n", (int)response->errorCode());
         Serial.printf("Function: %d\n", response->functionCode()); 
