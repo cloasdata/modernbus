@@ -32,7 +32,8 @@ void setup(){
     Serial.begin(9600);
     // add input coil. Writing the status bit as requested by the client
     server.responseTo(0x05, 0x00, [](ModbusResponse<ProviderType> *response){
-       shouldUpdate=response->payload(); 
+       shouldUpdate=response->payload();
+       response->sendEcho();
     });
 
     // add a holding register address 0
