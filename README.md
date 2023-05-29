@@ -273,6 +273,35 @@ void loop(){
 }
 
 ```
+
+### Exception
+You also can hook up in the way client and server are handling exception. That could be very useful for debugging.
+```c++
+    // ...
+
+    // add a custom exception handler
+    client.setOnError([](ServerResponse *response, ErrorCode error){
+        Serial.print("Got Exception:\n");
+        Serial.printf("Code: %d\n", (int)error);
+        Serial.printf("Slave: %d\n", response->slaveAdress());
+        Serial.printf("Function: %d\n", response->functionCode());
+    });
+
+    // ...
+```
+```c++
+    // ...
+
+    server.setOnExceptionHandler([](ModbusExceptionResponse<ProviderType> *response){
+        Serial.print("Exception:\n");
+        Serial.printf("Error: %d\n", (int)response->errorCode());
+        Serial.printf("Function: %d\n", response->functionCode()); 
+        // finally send the exception
+        response->sendException();
+    });
+
+    // ...
+```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Roadmap
