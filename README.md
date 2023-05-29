@@ -221,12 +221,12 @@ In the handler you could use the response to use it with you buisness logic.
 
 union {
     float temperature;
-    uint8_t byteCode[4]
+    uint8_t byteCode[4];
 } sensorT;
 
 // first we do a typedef to shorthand the type expression
 // For the example we want to run via Hardware Serial
-using ProviderType = SerialProvider<HardwareSerial>
+using ProviderType = SerialProvider<HardwareSerial>;
 
 
 
@@ -237,15 +237,19 @@ Scheduler scheduler{};
 ProviderType provider{Serial};
 
 // create the client
-ModbusClient<ProvideType> client{&schedulder, &provider}
+ModbusClient<ProviderType> client{&scheduler, &provider};
 
 // And this is the request we want to do
 uint8_t ReadTemperature[] {0x01, 0x04, 0x01, 0x31, 0x0, 0x01E, 0x20, 0x31};
 
+// Request Write Coil
+uint8_t updateTempFrame[] {0x01, 0x05, 0x00, 0x00, 0xFF, 0xFF};
+ModbusRequest updateTemperature{updateTempFrame, sizeof(updateTempFrame), false, 0x02, [](ServerResponse *response ){}};
+
 void setup(){
     Serial.begin(9600);
     // first of all we want to poll the temperature from the slave
-    client.add(ReadTemperature, [](ServerResponse *response){
+    client.poll(ReadTemperature, sizeof(ReadTemperature), [](ServerResponse *response){
         for (uint8_t i = 0; i <4; i++){
             sensorT.byteCode[i] = response->payload()[i];
         }
@@ -264,7 +268,7 @@ void loop(){
     // from time to time we want that slave updates it temperature
     if (millis()-timeTaken >= 1000 ){
         bool toggle{false};
-        client.send();
+        client.send(&updateTemperature);
     }
 }
 
