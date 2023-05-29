@@ -115,12 +115,9 @@ If you are still in doubt of choosing modbus for you application, then there are
 The library assumes the arduino.h header. From this head it uses Serial and type aliases.
 Compiler supporting at least C++11.
 
-Dependecies required
-```
-	arkhipenko/TaskScheduler@^3.7.0
-	seimen/tinylinkedlist@1.2.0
-	seimen/mbparser@0.1.1
-```
+The prefered ways to get a distribution is via platformio depedency manager.
+
+
 ### Installation
 #### Github
 ```sh
@@ -129,10 +126,14 @@ git clone https://github.com/cloasdata/modernbus.git
 #### Platformio
 Add to platformio.ini or install via gui
 ```
+    seimen/modernbus@0.1.0
+```
+
+Dependecies required (will be installed by platformio)
+```
 	arkhipenko/TaskScheduler@^3.7.0
 	seimen/tinylinkedlist@1.2.0
 	seimen/mbparser@0.1.1
-    seimen/modernbus@0.1.0
 ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -276,6 +277,7 @@ void loop(){
 
 ## Roadmap
 ### General
+* Add library to arduino library manager
 * Add type constrains for template types whenever C++20 is available at a larger base
 * Remove dependency taskscheduler for interrupt/timer driven solution
 * Unify interfaces
