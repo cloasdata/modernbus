@@ -46,8 +46,7 @@ void setup(){
             response->sendException(3);
         }
     });
-    
-
+    server.start();
 }
 
 void loop(){
