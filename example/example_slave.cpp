@@ -37,8 +37,8 @@ void setup(){
 
     // add a holding register address 0
     server.responseTo(0x03, 0x00, [](ModbusResponse<ProviderType> *response){
-        // we may only allow to read 4 bytes from address 00
-        if (response->byteCount() == 4){
+        // we may only allow to read 1 register.
+        if (response->quantity() == 1){
             response->send(sensorT.byteCode, 4);
         }
         else {
