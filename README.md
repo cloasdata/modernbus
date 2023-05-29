@@ -292,7 +292,7 @@ You also can hook up in the way client and server are handling exception. That c
 ```c++
     // ...
 
-    server.setOnExceptionHandler([](ModbusExceptionResponse<ProviderType> *response){
+    server.setOnError([](ModbusExceptionResponse<ProviderType> *response){
         Serial.print("Exception:\n");
         Serial.printf("Error: %d\n", (int)response->errorCode());
         Serial.printf("Function: %d\n", response->functionCode()); 
