@@ -22,7 +22,6 @@
 class ServerResponse;
 class ModbusRequest;
 template <typename T> class ModbusClient;
-void removeWhitespace(char *s);
 uint16_t crc16_update(uint16_t crc, uint8_t a);
 
 #ifndef STD_FUNCTIONAL
