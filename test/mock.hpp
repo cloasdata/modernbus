@@ -1,3 +1,5 @@
+#ifndef MOCK_H
+#define MOCK_H
 #include <Arduino.h>
 #include <linkedlist.h>
 #include "../src/modernbus_provider.h"
@@ -142,3 +144,5 @@ class MockStream{
     }
 
 };
+
+#endif
