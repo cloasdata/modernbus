@@ -374,15 +374,11 @@ class ModbusServer{
         The polling is driven by the scheduler every intervall.
         */
         void _retrieveRequest(){
-            Serial.printf("Retrieving:\n");
             // while provider could deliver more than just frame we additional check 
             while (_provider->available()){
                 uint8_t msg = _provider->read();
-                Serial.printf("Server: S: %d, T: %X Size: %d\n", (int)_parser.state(), msg, _provider->available());
                 _parser.parse(msg);
-                Serial.printf("Server: S: %d\n", (int)_parser.state());
             }
-            Serial.printf("Server Complete with state: %d\n", (int)_parser.state());
             // inform provider that we have not reached the end of the frame
             if (_parser.state() != ParserState::slaveAddress && !_parser.isComplete()){
                 _provider->_informNotComplete(_parser.dataToReceive());
