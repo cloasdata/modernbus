@@ -1,22 +1,19 @@
 #ifndef modbus_client_h
 #define modbus_client_h
 
-//#undef STD_FUNCTIONAL
+#include <Arduino.h>
+#include <TaskSchedulerDeclarations.h>
+#include <mbparser.h>
+#include <linkedlist.h>
 
+#include "modernbus_request.h"
+#include "modernbus_provider.h"
+#include "modernbus_util.h"
+#include "modernbus_server_response.h"
 #ifdef STD_FUNCTIONAL
     #include <functional>
 #endif
 
-#include <Arduino.h>
-
-#include <TaskSchedulerDeclarations.h>
-
-#include "modernbus_request.h"
-#include "modernbus_provider.h"
-#include "mbparser.h"
-#include "linkedlist.h"
-#include "modernbus_util.h"
-#include "modernbus_server_response.h"
 
 // protos
 class ServerResponse;

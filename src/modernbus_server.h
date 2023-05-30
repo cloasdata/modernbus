@@ -3,7 +3,7 @@
 
 #include <TaskSchedulerDeclarations.h>
 #include <mbparser.h>
-#include "linkedlist.h"
+#include <linkedlist.h>
 #include "modernbus_provider.h"
 #include "modernbus_util.h"
 
@@ -14,11 +14,24 @@ class ModbusExceptionResponse;
 template <typename>
 class ModbusServer;
 
-template <typename T>
-using RequestHandler = void(*)(ModbusResponse<T> *response);
+#ifndef STD_FUNCTIONAL
+    template <typename T>
+    using RequestHandler = void(*)(ModbusResponse<T> *response);
 
-template <typename T>
-using ExceptionHandler = void(*)(ModbusExceptionResponse<T> *response);
+    template <typename T>
+    using ExceptionHandler = void(*)(ModbusExceptionResponse<T> *response);
+#endif
+
+#ifdef STD_FUNCTIONAL
+    #include <functional>
+    
+    template <typename T>
+    using RequestHandler = std::function<void(ModbusResponse<T> *response)>;
+    
+    template <typename T>
+    using ExceptionHandler = std::function<void(ModbusExceptionResponse<T> *response)>;
+#endif
+
 
 template <typename T>
 class ResponseBase{
