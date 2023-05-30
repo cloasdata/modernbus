@@ -2,28 +2,25 @@
 #define MODERNBUS_SERVER_RESPONSE_H
 
 #include <Arduino.h>
-
 #include "mbparser.h"
 
-
-
-#ifdef STD_FUNCTIONAL
-    #include <functional>
-#endif
 
 class ServerResponse;
 // avoid circular reference
 class ModbusRequest;
 
 // Function Pointer Types
+// If flag is set we can use full support of lambdas (capture this for example)
+// However, functional may be expensive
 #ifdef STD_FUNCTIONAL
-    typedef std::function<void(ServerResponse *response)> ResponseHandler;
-    typedef std::function<void(ServerResponse *response, ErrorCode errorCode)> ErrorHandler;
+    #include <functional>
+    using ResponseHandler = std::function<void(ServerResponse *response)>;
+    using ErrorHanlder = std::function<void(ServerResponse *response, ErrorCode errorCode)>;
 #endif
 
 #ifndef STD_FUNCTIONAL
-    typedef void (*ResponseHandler)(ServerResponse *response);
-    typedef void (*ErrorHandler)(ServerResponse *response, ErrorCode errorCode);
+    using ResponseHandler = void(*)(ServerResponse *response);
+    using ErrorHanlder = void(*)(ServerResponse *response, ErrorCode errorCode);
 #endif
 
 
