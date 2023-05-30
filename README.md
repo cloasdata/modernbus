@@ -126,7 +126,7 @@ git clone https://github.com/cloasdata/modernbus.git
 #### Platformio
 Add to platformio.ini or install via gui
 ```
-    seimen/modernbus@0.1.0
+    seimen/modernbus@0.3.2
 ```
 
 Dependecies required (will be installed by platformio)
@@ -138,6 +138,15 @@ Dependecies required (will be installed by platformio)
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
+
+### Compiler Flags
+Following flags are supported
+```sh
+-d STD_FUNCTIONAL
+```
+This will add functional library to modernbus. With functional included you than could use fully qualified lambdas with capture and pass methods as handlers.
+
+More to come maybe.
 
 ### Server Slave
 The server or slave provides ability to response to requests in the background. The user needs to register function code, address and a handler (provided as lambda or function).
