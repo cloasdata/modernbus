@@ -11,7 +11,7 @@
 <h3 align="center">mod(ern)bus</h3>
 
   <p align="center">
-    modern c++ mobus library
+    modern c++ modbus library
     <br />
     <a href="https://github.com/cloasdata/modernbus"><strong>Explore the docs »</strong></a>
     <br />
@@ -59,7 +59,7 @@
 </details>
 
 ## About The Project
-**mod(ern)bus** is a modern C++ library providing asynchronous modbus client (master) and modbus server (slave) implementation on all kind of hardware communciation such as RS232, RS485, and others.
+**mod(ern)bus** is a modern C++ library providing asynchronous modbus client (master) and modbus server (slave) implementation on all kind of hardware communication such as RS232, RS485, and others.
 
 ## Motiviation
 There are indeed plenty of good and not so good modbus implementations out for embedded system and especially for the arduino header. Most of them limit themselves to one major aspect of modbus standard. For example one may only provide a serial modbus master, so the programmer always have to deal with different dependencies and different APIs if he needs to implement different devices/communication channels on one project.
@@ -82,11 +82,11 @@ Beneath these elementary problems, I also don't like how the main dependency of 
 
 ## How it works
 Clients are sending requests and handling responses from slaves. Server are handling requests from clients and sending responses.
-All messages or frames are parsed by [mbparser](https://github.com/cloasdata/mbparser) library in the core of the client/server implementaiton
-On a modbus network always only one master or slave is sending data. The modbus frame always starts with the slave adress. So each slave can check if the frame is for him or can drop the frame immediatly to not longer occupy ressources.
+All messages or frames are parsed by [mbparser](https://github.com/cloasdata/mbparser) library in the core of the client/server implementation
+On a modbus network always only one master or slave is sending data. The modbus frame always starts with the slave address. So each slave can check if the frame is for him or can drop the frame immediately to not longer occupy resources.
 Whenever there is a frame complete (crc check was good), then a user handler is called.
 Server then typical response with stuff, when the task was done or the data is ready. Note that clients always waiting for this response and may timeout if it takes too long.
-Client receiving the response is getting aknowledge in form of a echo frame or getting data as requested. But masters also can send larger data frames if required.
+Client receiving the response is getting acknowledge in form of a echo frame or getting data as requested. But masters also can send larger data frames if required.
 Here is a [website](https://www.modbustools.com/modbus.html) with more details and good examples.
 
 ## Should I use it
@@ -99,23 +99,27 @@ But what I can say from my own experience is that modernbus may not be the choic
 
 
 ## Is modbus deprecated
-Yes, indeed modbus is very old und lacks a lot of modern features in comparsion to CAN bus for example.
+Yes, indeed modbus is very old und lacks a lot of modern features in comparison to CAN bus for example.
 
 But at the end modbus is very simple and easy to understand. This is one very major advantage when you are only dealing every here and then with a bus topology. So you do not have to learn a lot of stuff before hunting bugs on modbus networks.
 This is even better when you are not a domain specific guy. For example you need commissioning some PLC -> valve communication and you are just the mechanical guy.
 
-Basic implementation (not like this framework) may be written in less than 10 loc for a server responding to one function code. As features can be stripped completly modbus runs therfore also on very tiny machines.
+Basic implementation (not like this framework) may be written in less than 10 loc for a server responding to one function code. As features can be stripped completely modbus runs therefore also on very tiny machines.
 
-If you are still in doubt of choosing modbus for you application, then there are many websites out comparing in detail other bus communcation protocolls. 
+If you are still in doubt of choosing modbus for you application, then there are many websites out comparing in detail other bus communication protocol's. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Getting Started
 ### Prerequisites
-The library assumes the arduino.h header. From this head it uses Serial and type aliases.
-Compiler supporting at least C++11.
+The library includes the arduino.h header. From this header it uses Serial and the typical arduino type alias like uint8_t.
+To compile a c++ compiler supporting at least C++11 is required.
+Features used:
+Lambdas without capture
+When flagged, full feature of functional lib
+Generic type templates 
 
-The prefered ways to get a distribution is via platformio depedency manager.
+The preferred way to get this distribution is via platformio dependency manager.
 
 
 ### Installation
@@ -129,7 +133,7 @@ Add to platformio.ini or install via gui
     seimen/modernbus@0.3.2
 ```
 
-Dependecies required (will be installed by platformio)
+Dependencies required (will be installed by platformio)
 ```
 	arkhipenko/TaskScheduler@^3.7.0
 	seimen/tinylinkedlist@1.2.0
@@ -153,7 +157,7 @@ The server or slave provides ability to response to requests in the background. 
 The handler is called with a pointer to a response object.
 
 The response object is already prefilled with data from the request.
-Once you have validated the data, you can send payload, echo or exception. Also you may do you buisness logic within the callback.
+Once you have validated the data, you can send payload, echo or exception. Also you may do you business logic within the callback.
 #### Example
 ```c++
 // A simple non blocking modbus slave
@@ -221,7 +225,7 @@ void loop(){
 ### Client Master
 The client can either poll requests or send single request.
 Once the a response was received the handler is called.
-In the handler you could use the response to use it with you buisness logic. 
+In the handler you could use the response to use it with you business logic. 
 
 #### Example
 ```c++
@@ -318,7 +322,7 @@ You also can hook up in the way client and server are handling exception. That c
 ### General
 * Add library to arduino library manager
 * Add type constrains for template types whenever C++20 is available at a larger base
-* Remove dependency taskscheduler for interrupt/timer driven solution
+* Remove dependency task scheduler for interrupt/timer driven solution
 * Unify interfaces
 * Add more provider templates
 ### Client/Master
