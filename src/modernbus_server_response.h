@@ -2,7 +2,7 @@
 #define MODERNBUS_SERVER_RESPONSE_H
 
 #include <Arduino.h>
-#include "mbparser.h"
+#include <mbparser.h>
 
 
 class ServerResponse;
