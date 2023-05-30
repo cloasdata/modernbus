@@ -80,13 +80,12 @@ void GivenWriteRequest_WhenBothUsingCrosslink_ThenNoError(){
 }
 
 void runIntegrationTests(){
-    Serial.print("\nTest Starting\n");
+    Serial.print("\n-- Testing integration of Modernbus --\n");
     //GivenClientAndServer_WhenBothUsingCrosslink_ThenNoError();
     Serial.print(".");
     //GivenRequest_WhenBothUsingCrosslink_ThenNoError();
     Serial.print(".");
     GivenWriteRequest_WhenBothUsingCrosslink_ThenNoError();
     Serial.print(".");
-    Serial.print("\nTest Done\n");
-    ESP.restart();
+    Serial.print("\n-- Integration Test Done --\n");
 }
