@@ -283,7 +283,6 @@ class ModbusClient{
             while (!_parser.isComplete() && !_parser.isError() && _provider->available()){
                 uint8_t token = _provider->read();
                 _parser.parse(token);
-                Serial.printf("Client Retrieve: %X, State: %d\n",token, (int)_parser.state());
             }
 
             if (!_parser.isComplete()){
