@@ -15,7 +15,7 @@ class ModbusRequest;
 #ifdef STD_FUNCTIONAL
     #include <functional>
     using ResponseHandler = std::function<void(ServerResponse *response)>;
-    using ErrorHanlder = std::function<void(ServerResponse *response, ErrorCode errorCode)>;
+    using ErrorHandler = std::function<void(ServerResponse *response, ErrorCode errorCode)>;
 #endif
 
 #ifndef STD_FUNCTIONAL
