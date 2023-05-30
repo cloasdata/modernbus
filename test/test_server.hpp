@@ -47,7 +47,7 @@ void GivenServer_WhenStarted_ThenNoError(){
     mock.append(ReadRequest04, sizeof(ReadRequest04));
     mock.begin();
 
-    server.responseTo(04, 0x0131, [](ModbusResponse<SerialProvider<MockStream>> *response){});
+    server.responseTo(04, 0x0001, [](ModbusResponse<SerialProvider<MockStream>> *response){});
     server.start();
     while (mock.available()){
         serverScheduler.execute();
@@ -62,7 +62,7 @@ void GivenServer_WhenRun_ThenCallback(){
     mock.append(ReadRequest04, sizeof(ReadRequest04));
     mock.begin();
 
-    server.responseTo(04, 0x0131, [](ModbusResponse<SerialProvider<MockStream>> *response){
+    server.responseTo(04, 0x0001, [](ModbusResponse<SerialProvider<MockStream>> *response){
         uint8_t payload[2] = {0x00, 0xFF};
         response->send(payload, 2);
     });
@@ -72,7 +72,7 @@ void GivenServer_WhenRun_ThenCallback(){
     while (!server.getParser().isComplete() && !server.getParser().isError()){
         serverScheduler.execute();
     }
-    assert(mock.writeBuffer()[3] == 0xFF);
+    assert(mock.writeBuffer()[4] == 0xFF);
 }
 
 void Given03Handler_WhenRequest04_ThenExceptionResponse(){
@@ -126,7 +126,7 @@ void GivenServerVerboseParser_WhenRequestCRCBad_ThenExceptionResponse(){
     mock.begin();
     server.verboseParser(true); // parser errors are ignored by default
 
-    server.responseTo(04, 0x0131, [](ModbusResponse<SerialProvider<MockStream>> *response){
+    server.responseTo(04, 0x0001, [](ModbusResponse<SerialProvider<MockStream>> *response){
         uint8_t payload[2] = {0x00 ,0xFF};
         response->send(payload, 2);
     });
@@ -171,7 +171,6 @@ void runServerTest(){
     uint16_t heapConsumed = ESP.getFreeHeap();
     unsigned long runningTime = millis();
 
-    Given130AddressHandler_WhenRequest130_ThenExceptionResponse();
     GivenStreamWhenNewInstanceThenNoError();
     printf(".");
     GivenServer_WhenStartedandRun_RaiseNoException();
@@ -184,6 +183,7 @@ void runServerTest(){
     printf(".");
     Given03Handler_WhenRequest04_ThenExceptionResponse();
     printf(".");
+    Given130AddressHandler_WhenRequest130_ThenExceptionResponse();
     printf(".");
     GivenServerVerboseParser_WhenRequestCRCBad_ThenExceptionResponse();
     printf(".");
