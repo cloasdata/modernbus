@@ -380,7 +380,7 @@ class ModbusServer{
                 _parser.parse(msg);
             }
             // inform provider that we have not reached the end of the frame
-            if (_parser.state() != ParserState::slaveAddress && !_parser.isComplete()){
+            if (_parser.state() != ParserState::slaveAddress && !_parser.isComplete() && !_parser.isError()){
                 _provider->_informNotComplete(_parser.dataToReceive());
                 _parser.reset();
             }
