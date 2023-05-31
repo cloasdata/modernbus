@@ -48,6 +48,10 @@ class ResponseBase{
            _sendException(exceptionCode);
         }
 
+        void sendException(ErrorCode errorCode){
+            _sendException(static_cast<int>(errorCode));
+        }
+
 
         ResponseBase(uint8_t slaveAddress, uint8_t functionCode, uint16_t address, ModbusServer<T>* server)
         :   _slaveAddress{slaveAddress},
