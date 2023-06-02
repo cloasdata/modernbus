@@ -219,6 +219,16 @@ void loop(){
     }
 }
 ```
+Now instead of using a response handler it is also possible to use the traditional mapping style of modbus.
+```c++
+server.responseTo(0x03, 0x00).with(PayloadArr, 10, 2);
+```
+But you may also combine both together. For example to prepare the state but leave it mapped.
+```c++
+server.responseTo(0x03, 0x00, [](ModbusResponse<ProviderType> *response){preparePayloadArr();}).with(PayloadArr, 10, 2);
+```
+This is always good if to accumulate the payload data is expensive. Than one just could send the most recent state without explicit manipulating it.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
