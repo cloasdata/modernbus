@@ -41,7 +41,7 @@ class ResponseBase{
         }
 
         uint16_t address() const {
-            return _address;
+            return _myAddress;
         }
 
         void sendException(uint8_t exceptionCode){
@@ -56,28 +56,29 @@ class ResponseBase{
         ResponseBase(uint8_t slaveAddress, uint8_t functionCode, uint16_t address, ModbusServer<T>* server)
         :   _slaveAddress{slaveAddress},
             _functionCode{functionCode},
-            _address{address},
+            _myAddress{address},
             _server{server}
         
         {}
 
-        ResponseBase(uint8_t slaveID, ModbusServer<T>* server)
-        :   _slaveAddress{slaveID},
-            _server{server}
+        // ResponseBase(uint8_t slaveID, ModbusServer<T>* server)
+        // :   _slaveAddress{slaveID},
+        //     _server{server}
         
-        {}
+        // {}
 
         virtual ~ResponseBase() = default;
 
 
     protected:
-        uint8_t _slaveAddress{0};
-        uint8_t _functionCode{0};
+        uint8_t _slaveAddress;
+        uint8_t _functionCode;
+        uint16_t _myAddress;
         uint8_t _byteCount{0};
-        uint16_t _address{0};
         uint16_t _crc{0xFFFF};
         ModbusServer<T>* _server{nullptr};
         size_t _size{5};
+        bool _sent{false};
         
         void _sendHeader(){
             _reset();
@@ -86,8 +87,12 @@ class ResponseBase{
             _write(_functionCode);
         }
 
-        void _sendPayload(uint8_t* payload, size_t len){
+        void _sendTwoBytes(uint16_t twoBytes){
+            _write(highByte(twoBytes));
+            _write(lowByte(twoBytes));
+        }
 
+        void _sendPayload(uint8_t* payload, uint8_t len){
             for (uint16_t idx=0; idx < len; idx++){
                 _write(payload[idx]);
                 _size++;
@@ -97,7 +102,7 @@ class ResponseBase{
         void _sendCRC(){
             _write(lowByte(_crc), false);
             _write(highByte(_crc), false);
-            
+            _sent = true;
             _server->_provider->_endTransmission();
         }
 
@@ -111,6 +116,7 @@ class ResponseBase{
         void _reset(){
             _crc = 0xFFFF;
             _size=5;
+            _sent = false;
 
         }
 
@@ -140,12 +146,13 @@ class ModbusResponse: public ResponseBase<T>{
         
         Returns true if function code allows payload (i.e. 01-04)
         */
-        bool send(uint8_t* payload, size_t len){
+        bool send(uint8_t* payload, uint8_t len){
             if (this->_functionCode <= 0x04) {
                 this->_sendHeader();
-                this->_write(len); // bytecount
+                this->_write(len); // byteCount
                 ResponseBase<T>::_sendPayload(payload, len);
                 this->_sendCRC();
+                this->_sent = true;
                 return true;
             }
             else {
@@ -159,11 +166,28 @@ class ModbusResponse: public ResponseBase<T>{
         */
         void sendEcho(){
             this->_sendHeader();
-            this->_write(highByte(this->_address));
-            this->_write(lowByte(this->_address));
-            ResponseBase<T>::_sendPayload(_payload, 2);
+            this->_sendTwoBytes(this->_myAddress);
+            if (this->_functionCode == 5 || this->_functionCode == 6){
+                ResponseBase<T>::_sendPayload(_payload, 2);
+            } else {
+                this->_sendTwoBytes(_quantity);
+            }
             this->_sendCRC();
+            this->_sent = true;
         }
+
+        /*
+        with allows you to simply map an array to a function code and a starting address.
+        without the need for a handler.
+        By default the register size of a modbus register is 16 bits ie 2 bytes long.
+        If you are sending for example floats than you need to explicit pass registerLen parameter.
+        */
+        ModbusResponse<T>& with(uint8_t* payload, uint8_t len, uint8_t registerLen = 2){
+            _mapping = payload;
+            _sendLen = len;
+            _registerLen = registerLen;
+            return *this;
+        };
 
         uint8_t byteCount() const {
             return this->_byteCount;
@@ -196,16 +220,49 @@ class ModbusResponse: public ResponseBase<T>{
         size_t _size{5};
         uint16_t _quantity{0};
         uint8_t* _payload{nullptr};
+        uint8_t* _mapping{nullptr};
+        uint8_t _sendLen{0};
+        uint8_t _registerLen{2};
+        uint16_t _requestAddress{};
 
 
         void _update(RequestParser *parser){
             this->_byteCount = parser->byteCount();
             this->_quantity = parser->quantity();
             this->_payload = parser->data();
+            _requestAddress = parser->address();
         }
 
         void _callHandler(){
-            _handler(this);
+            if (_handler) {
+                _handler(this);
+            } 
+            if (!this->_sent && _mapping){
+                _handleMapping();
+            }
+            _reset();
+        }
+
+        void _handleMapping(){
+            uint16_t offset = _requestAddress - this->_myAddress;
+            uint8_t byteCount = _registerLen * _quantity - offset;
+            if (byteCount <= _sendLen){
+                this->_sendHeader();
+                this->_write(byteCount);
+                for (; offset <byteCount; offset++){
+                    this->_write(_mapping[offset]);
+                }
+                this->_sendCRC();
+
+            } else {
+                this->sendException(ErrorCode::illegalDataValue);
+            }
+            this->_sent = true;
+        }
+
+        void _reset(){
+            //this->_reset();
+            //_quantity = 0;
         }
 
 };
@@ -230,7 +287,7 @@ class ModbusExceptionResponse: public ResponseBase<T>{
 
         
         ModbusExceptionResponse(uint8_t slaveID, ExceptionHandler<T> handler, ModbusServer<T>* server)
-        :   ResponseBase<T>::ResponseBase{slaveID, server},
+        :   ResponseBase<T>::ResponseBase{slaveID, 0, 0xFFFF, server},
             _handler{handler}
         {}
 
@@ -278,6 +335,23 @@ class ModbusServer{
             _responses.append(response);
             return *response;
         };
+
+        /*
+        Adds a response to the server but without handler. User required to specify response payload
+        through with method of the ModbusResponse object.
+        */
+        ModbusResponse<T>& responseTo(uint8_t functionCode, uint16_t address){
+            ModbusResponse<T>* response = new ModbusResponse<T>{
+                _slaveAddress,
+                functionCode,
+                address,
+                nullptr,
+                this
+            };
+            _responses.append(response);
+            return *response;
+        };
+
 
         ModbusExceptionResponse<T>& setOnError(ExceptionHandler<T> handler){
             _exceptionResponse = ModbusExceptionResponse<T>{
@@ -334,14 +408,6 @@ class ModbusServer{
             _mainTask.setInterval(_pollingInterval);
         }
 
-        /*
-        Whenever there is a error from the parser, the exception response
-        will try to poll as many information as the parser still could parse.
-        If not set (default), the exception response will not have such data or are invalid.
-        */
-        void verboseParser(bool v){
-            _verboseParser = v;
-        }
 
         size_t errorCount(){
             return _errorCount;
@@ -367,8 +433,6 @@ class ModbusServer{
         uint16_t _errorCount{};
 
         bool _isRunning {false};
-
-        bool _verboseParser{false};
 
         TinyLinkedList<ModbusResponse<T>*> _responses{};
         ModbusExceptionResponse<T> _exceptionResponse{};
@@ -406,15 +470,15 @@ class ModbusServer{
         }
 
         ModbusResponse<T>* _findResponse(){
-            ModbusResponse<T>* el{nullptr};
+            ModbusResponse<T>* response{nullptr};
             _responses.iter.reset();
             while (_responses.iter()){
-                el = _responses.iter.next();
+                response = _responses.iter.next();
                 
-                if (el->functionCode() == _parser.functionCode()){
+                if (response->functionCode() == _parser.functionCode()){
                     
-                    if (el->address() == _parser.address()){  
-                        return el;
+                    if (_parser.address() >= response->address()){  
+                        return response;
                     } else {
                         _exceptionResponse._errorCode = ErrorCode::illegalDataAddress;
                     }
@@ -424,7 +488,7 @@ class ModbusServer{
 
             }
             _exceptionResponse._functionCode = _parser.functionCode();
-            _exceptionResponse._address = _parser.address();
+            _exceptionResponse._myAddress = _parser.address();
             return nullptr;
         }
 
@@ -437,16 +501,14 @@ class ModbusServer{
         }
 
         /*
-        handles all kind of parser errors
+        handles all kind of parser errors.
+        Assign Request Address and Function code
         */
         void _onParserError(){
             _errorCount++;
-            if (_verboseParser){
-                _exceptionResponse._functionCode = _parser.functionCode();
-                _exceptionResponse._address = _parser.address();
-                _exceptionResponse._errorCode = _parser.errorCode();
-                _onServerError();
-            }
+            _exceptionResponse._errorCode = _parser.errorCode();
+            _exceptionResponse._functionCode = _parser.functionCode();
+            _onServerError();
         }
 
 
