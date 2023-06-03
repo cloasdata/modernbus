@@ -31,6 +31,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
+        <li><a href="#status">Motivation</a></li>
         <li><a href="#motivation">Motivation</a></li>
         <li><a href="#features">Features</a></li>
         <li><a href="#how-it-works">How It Works</a></li>
@@ -60,6 +61,9 @@
 
 ## About The Project
 **mod(ern)bus** is a modern C++ library providing asynchronous modbus client (master) and modbus server (slave) implementation on all kind of hardware communication such as RS232, RS485, and others.
+
+## Status
+At the moment I am actively developing this library for a semi industrial application. Depending on the needs there I may add additional feature or even change the API.
 
 ## Motiviation
 There are indeed plenty of good and not so good modbus implementations out for embedded system and especially for the arduino header. Most of them limit themselves to one major aspect of modbus standard. For example one may only provide a serial modbus master, so the programmer always have to deal with different dependencies and different APIs if he needs to implement different devices/communication channels on one project.
@@ -335,8 +339,7 @@ You also can hook up in the way client and server are handling exception. That c
 * Remove dependency task scheduler for interrupt/timer driven solution
 * Unify interfaces
 * Add more provider templates
-### Client/Master
-* Add timeout handling.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
