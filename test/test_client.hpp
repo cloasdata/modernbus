@@ -211,7 +211,7 @@ void GivenClientWithHandlers_WhenSendingSeveralSingleRequest_ReturnThemInOrder()
     while (called < 3){
         clientScheduler.execute();
     }
-    Serial.printf("TO: %d, EC: %d, Code: %d\n", client.timeoutCount(), client.errorCount(), (int)client.getParser().errorCode());
+    //Serial.printf("TO: %d, EC: %d, Code: %d\n", client.timeoutCount(), client.errorCount(), (int)client.getParser().errorCode());
     assert(client.errorCount() == 0);
 }
 
@@ -305,9 +305,10 @@ void GivenClientPollingRequest_WhenResponseTakesLong_ThenTimeOutOccurs(){
     mStream.setUnavailable(3, 600);
     mStream.begin();
 
+    bool errorHandlerCalled{false};
     ModbusClient<providerType> client {&clientScheduler, &testProvider};
-    client.setOnError([](ServerResponse *response, ErrorCode code ){
-        Serial.printf("FC: %X, ADDR: %X, EC: %d", response->functionCode(), response->address(),(int)code);
+    client.setOnError([&errorHandlerCalled](ServerResponse *response, ErrorCode code ){
+        errorHandlerCalled = true;
     });
     client.start();
     bool called{false};
@@ -326,6 +327,7 @@ void GivenClientPollingRequest_WhenResponseTakesLong_ThenTimeOutOccurs(){
     }
 
     assert(client.timeoutCount() == 1);
+    assert(errorHandlerCalled == true);
     assert(called == false);
 
 }
