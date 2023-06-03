@@ -90,7 +90,7 @@ void GivenClient_WhenAdd_Request_ThenCorrectResponeClient(){
     ModbusClient<providerType> client {&clientScheduler,&testProvider};
     client.poll(ReadRequest04, sizeof(ReadRequest04), false, 2, [](ServerResponse* response){
         assert(response->functionCode() == 0x04);
-        assert(response->slaveAdress() == 0x01);
+        assert(response->slaveAddress() == 0x01);
         assert(response->byteCount() == 80);
         assert(response->request()->throttle() == 5);
         for (int i = 0; i < response->byteCount(); i++){
@@ -133,7 +133,7 @@ void GivenWriteRequest05_WhenSendRequest_ThenCorrectResponse(){
     bool called{false};
     ModbusRequest request{WriteRequest05, sizeof(WriteRequest05) , false, 0, [&called](ServerResponse *response ){
         called = true;
-        assert(response->slaveAdress() == 0x01);
+        assert(response->slaveAddress() == 0x01);
         assert(response->functionCode() == 0x05);
         assert(response->address() == 0x00AC);
         assert(response->payload()[0] == 0xFF);
@@ -181,8 +181,9 @@ void GivenClientWithHandlers_WhenSendingSeveralSingleRequest_ReturnThemInOrder()
     MockStream mStream{};
     providerType testProvider{mStream};
     mStream.append(Response01, sizeof(Response01));
-    for (int i = 0; i<10; i++){
-        mStream.append(Response04, sizeof(Response04));
+    for (int i = 0; i<3; i++){
+        // Response to 05 is a echo.
+        mStream.append(WriteRequest05, sizeof(WriteRequest05));
     }
     mStream.append(Response16, sizeof(Response16));
     mStream.begin();
@@ -190,20 +191,27 @@ void GivenClientWithHandlers_WhenSendingSeveralSingleRequest_ReturnThemInOrder()
     ModbusClient<providerType> client {&clientScheduler, &testProvider};
     uint8_t called = 0;
     
-    ModbusRequest request{WriteRequest05, sizeof(WriteRequest05), false, 0, [&called](ServerResponse *response ){called++;}};
-    client.poll(ReadRequest01, sizeof(ReadRequest01), [&called, &client, &request](ServerResponse *response ){
+    ModbusRequest WriteRequest{WriteRequest05, sizeof(WriteRequest05), false, 0, [&called](ServerResponse *response ){called++;}};
+    
+    client.poll(ReadRequest01, sizeof(ReadRequest01), [&called, &client, &WriteRequest](ServerResponse *response ){
         called++;
-        for (int i = 0; i<10; i++){
-            client.send(&request);
+        for (int i = 0; i<3; i++){
+            client.send(&WriteRequest);
         }
+    
     });
     
     client.poll(WriteRequest16, sizeof(WriteRequest16), [&called](ServerResponse *response ){called++;});
+
+    client.setOnError([](ServerResponse *response, ErrorCode code ){
+        Serial.printf("FC: %X, ADDR: %X, EC: %d", response->functionCode(), response->address(),(int)code);
+    });
     client.start();
 
-    while (called < 12){
+    while (called < 3){
         clientScheduler.execute();
     }
+    Serial.printf("TO: %d, EC: %d, Code: %d\n", client.timeoutCount(), client.errorCount(), (int)client.getParser().errorCode());
     assert(client.errorCount() == 0);
 }
 
@@ -290,6 +298,38 @@ void GivenClientWithHandlersSendingSingleRequests_WhenDestroyed_ReturnNoError(){
     /* todo */
 }
 
+void GivenClientPollingRequest_WhenResponseTakesLong_ThenTimeOutOccurs(){
+    MockStream mStream{};
+    providerType testProvider{mStream};
+    mStream.append(WriteRequest05, sizeof(WriteRequest05)); // echo msg
+    mStream.setUnavailable(3, 600);
+    mStream.begin();
+
+    ModbusClient<providerType> client {&clientScheduler, &testProvider};
+    client.setOnError([](ServerResponse *response, ErrorCode code ){
+        Serial.printf("FC: %X, ADDR: %X, EC: %d", response->functionCode(), response->address(),(int)code);
+    });
+    client.start();
+    bool called{false};
+    ModbusRequest request{WriteRequest05, sizeof(WriteRequest05) , false, 0, [&called](ServerResponse *response ){
+        called = true;
+        assert(response->slaveAddress() == 0x01);
+        assert(response->functionCode() == 0x05);
+        assert(response->address() == 0x00AC);
+        assert(response->payload()[0] == 0xFF);
+    }};
+
+    client.send(&request);
+    
+    while(!client.timeoutCount()){
+        clientScheduler.execute();
+    }
+
+    assert(client.timeoutCount() == 1);
+    assert(called == false);
+
+}
+
 
 void runClientTest(){
     printf("\n\n -- Testing Modernbus Client -- \n\n");
@@ -319,6 +359,8 @@ void runClientTest(){
     GivenClientWithErrorHandler_WhenResponseWrong_CallErrorHandler();
     printf(".");
     GivenClientFunctionCodeValidation_WhenResponseWrong_CallErrorHandler();
+    printf(".");
+    GivenClientPollingRequest_WhenResponseTakesLong_ThenTimeOutOccurs();
     printf(".");
 
     printf("\n");
