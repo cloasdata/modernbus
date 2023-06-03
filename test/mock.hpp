@@ -31,6 +31,9 @@ class MockStream{
     size_t _resetCount{0};
     TinyLinkedList<DataStruct> readData{};
     TinyLinkedList<DataStruct> writeData{};
+
+    int32_t _readDelay{0};
+    int32_t _writeDelay{0};
     
     public:
     MockStream(size_t buffSize = 200)
@@ -86,6 +89,9 @@ class MockStream{
     }
 
     uint8_t read(){
+        if (_readDelay){
+            delay(_readDelay);
+        }
         _read++;
         if (_readCursor != _readEnd){
             return *_readCursor++;
@@ -141,6 +147,10 @@ class MockStream{
             res = res && (_currentWrite.arrPtr[i] == data[i]);
         }
         return res;
+    }
+
+    void setReadDelay(int32_t millis_){
+        _readDelay = millis_;
     }
 
 };
