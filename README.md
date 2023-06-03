@@ -31,7 +31,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
-        <li><a href="#status">Motivation</a></li>
+        <li><a href="#status">Status</a></li>
         <li><a href="#motivation">Motivation</a></li>
         <li><a href="#features">Features</a></li>
         <li><a href="#how-it-works">How It Works</a></li>
