@@ -56,6 +56,10 @@ class MockStream{
         writeData.~TinyLinkedList();
     }
 
+    int baudRate(){
+        return 1152000;
+    }
+
     void begin(bool prime=false){
         _begin = true;
         assert(readData.size());

@@ -69,7 +69,7 @@ class SerialProvider: public ProviderBase<TSerialStream>{
 
         uint8_t _calculateTXTime(uint8_t noOfBytes) override {
             uint16_t bitsTx = 10 * noOfBytes; // 10 bits per byte to send 0,5 + 8 + 1 + 0,5
-            return bitsTx / stream.baudRate();
+            return bitsTx / this->_stream.baudRate();
         }
 };
 

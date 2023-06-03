@@ -16,6 +16,7 @@ class CrossLinkStream{
         size_t write(uint8_t value);
         uint8_t read();
         size_t available();
+        int baudRate();
         bool operator==(const CrossLinkStream& rStream);
     private:
         CrossLinkStream(TinyLinkedList<uint8_t> &buffer, CrossLinkManager &manager);

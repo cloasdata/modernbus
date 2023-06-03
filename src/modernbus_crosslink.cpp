@@ -28,6 +28,11 @@ size_t CrossLinkStream::available(){
     return _buffer.size();
 }
 
+int CrossLinkStream::baudRate()
+{
+    return 1152000;
+}
+
 bool CrossLinkStream::operator==(const CrossLinkStream &rStream)
 {
     return &_buffer == &rStream._buffer;
