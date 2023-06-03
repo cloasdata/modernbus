@@ -292,27 +292,41 @@ class ModbusClient{
             }
 
             if (!_parser.isComplete() && !_parser.isError()){
-                // Inform provider provider
                 _provider->_informNotComplete(_parser.dataToReceive());
-                _handleTimeOut();
+                // See if timeout
+                if (_waitUntilTimeOut()){
+                    return;
+                } else { // timeout
+                    _handleTimeOut();
+                }
             }
             _mainTask.setCallback([this](){ _dispatchRequest();});
 
         };
 
+        bool _waitUntilTimeOut(){
+            // wait further until timeout
+            uint32_t sinceSent = millis() - _currentRequest->_requestSent;
+            if (sinceSent < _currentRequest->_timeOut){
+                uint32_t wait_until = _currentRequest->_timeOut - sinceSent;
+                _repeatRetrieve(wait_until);
+                return true;
+            } else {
+                return false;
+            }
+            
+        }
+
         void _handleTimeOut(){
-                // wait further until timeout
-                uint32_t sinceSent = millis() - _currentRequest->_requestSent;
-                if (sinceSent < _currentRequest->_timeOut){
-                    _mainTask.setCallback([this](){ _retrieveResponse();});
-                    _mainTask.delay(_currentRequest->_timeOut - sinceSent);
-                    return;
-                } else { // timeout
-                    _timeoutCount++;
-                    _errorCount++;
-                    _lastErrorRequest = _currentRequest;
-                    _handleError(ErrorCode::slaveDeviceFailure);
-                }
+            _timeoutCount++;
+            _errorCount++;
+            _lastErrorRequest = _currentRequest;
+            _handleError(ErrorCode::slaveDeviceFailure);
+        }
+
+        void _repeatRetrieve(uint32_t addDelay){
+            _mainTask.setCallback([this](){ _retrieveResponse();});
+            _mainTask.delay(addDelay);
         }
         
         // Request handling
