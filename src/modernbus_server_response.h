@@ -33,7 +33,7 @@ class ServerResponse{
     friend class ModbusRequest;
     public:
         ModbusRequest* request() const {return _request;};
-        uint8_t slaveAdress() const {return _slaveAddress;};
+        uint8_t slaveAddress() const {return _slaveAddress;};
         uint8_t functionCode() const {return _functionCode;};
         uint16_t address() const {return _address;};
         uint8_t *payload() const {return _payload;};
