@@ -7,7 +7,7 @@ ModbusRequest::ModbusRequest(uint8_t *request, uint16_t requestSize, bool swap, 
     _registerSize{registerSize},
     _handler{handler},
     _response{this},
-    _slaveAdress{request[0]},
+    _slaveAddress{request[0]},
     _functionCode{request[1]},
     _address{(uint16_t)((request[2] << 8) | request[3])}
 {
@@ -21,7 +21,7 @@ ModbusRequest::~ModbusRequest(){
 }
 
 uint8_t ModbusRequest::slaveAddress() const{
-    return _slaveAdress;
+    return _slaveAddress;
 }
 
 uint16_t ModbusRequest::functionCode() const {

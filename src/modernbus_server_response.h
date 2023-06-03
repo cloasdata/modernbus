@@ -33,7 +33,7 @@ class ServerResponse{
     friend class ModbusRequest;
     public:
         ModbusRequest* request() const {return _request;};
-        uint8_t slaveAdress() const {return _slaveAdress;};
+        uint8_t slaveAdress() const {return _slaveAddress;};
         uint8_t functionCode() const {return _functionCode;};
         uint16_t address() const {return _address;};
         uint8_t *payload() const {return _payload;};
@@ -42,7 +42,7 @@ class ServerResponse{
     private:
         ServerResponse(ModbusRequest *request);
         ModbusRequest *_request;
-        uint8_t _slaveAdress{0xFF};
+        uint8_t _slaveAddress{0xFF};
         uint8_t _functionCode{0};
         uint16_t _byteCount{};
         uint16_t _address{};

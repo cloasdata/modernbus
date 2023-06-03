@@ -292,7 +292,7 @@ class ModbusClient{
                 // wait further until timeout
                 uint32_t sinceSent = millis() - _currentRequest->_requestSent;
                 if (sinceSent < _currentRequest->_timeOut){
-                    mainTask.setCallback([this](){ _retrieveResponse();});
+                    _mainTask.setCallback([this](){ _retrieveResponse();});
                     _mainTask.delay(_currentRequest->_timeOut - sinceSent);
                     return;
                 } else { // timeout
@@ -359,7 +359,7 @@ class ModbusClient{
                 _completeCount++;
                 // this makes sure that user will only receive valid data
                 ServerResponse &response = _currentRequest->response();
-                response._slaveAdress = _parser.slaveAddress();
+                response._slaveAddress = _parser.slaveAddress();
                 response._functionCode = _parser.functionCode();
                 response._byteCount = _parser.byteCount();
                 response._address = _parser.address();

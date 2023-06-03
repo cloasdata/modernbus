@@ -63,7 +63,7 @@ class ModbusRequest{
         void* _extensionPtr {nullptr};
         void _validateSwap();
 
-        const uint8_t _slaveAdress;
+        const uint8_t _slaveAddress;
         const uint8_t _functionCode;
         const uint16_t _address;
 };
