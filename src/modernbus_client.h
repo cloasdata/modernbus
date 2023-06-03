@@ -27,7 +27,7 @@ uint16_t crc16_update(uint16_t crc, uint8_t a);
     void _parserComplete(ResponseParser *parser);
 
     template <typename U>
-    void _parserError(ResponseParser *parser);
+    void _handleError(ResponseParser *parser);
 #endif
 
 
@@ -40,7 +40,7 @@ class ModbusClient{
     
     #ifndef STD_FUNCTIONAL
         friend void _parserComplete<T>(ResponseParser *parser);
-        friend void _parserError<T>(ResponseParser *parser);
+        friend void _handleError<T>(ResponseParser *parser);
     #endif
     
     public:   
@@ -53,11 +53,11 @@ class ModbusClient{
             // Set callbacks
             #ifdef STD_FUNCTIONAL
                 _parser.setOnCompleteCB([this](ResponseParser *parser){_parserComplete();});
-                _parser.setOnErrorCB([this](ResponseParser *parser){_parserError();});
+                _parser.setOnErrorCB([this](ResponseParser *parser){_handleError();});
             #else
                 _parser.setExtension(this);
                 _parser.setOnCompleteCB(_parserComplete<T>);
-                _parser.setOnErrorCB(_parserError<T>);
+                _parser.setOnErrorCB(_handleError<T>);
             #endif
         }
 
@@ -311,7 +311,7 @@ class ModbusClient{
                     _timeoutCount++;
                     _errorCount++;
                     _lastErrorRequest = _currentRequest;
-                    _parserError(ErrorCode::slaveDeviceFailure);
+                    _handleError(ErrorCode::slaveDeviceFailure);
                 }
         }
         
@@ -365,7 +365,7 @@ class ModbusClient{
             {   
                 if (!_isFCOkay()){
 
-                    _parserError(ErrorCode::illegalFunction);
+                    _handleError(ErrorCode::illegalFunction);
                     return;
                 }
                 _completeCount++;
@@ -380,7 +380,7 @@ class ModbusClient{
                 _parser.free();
             };
 
-            void _parserError(ErrorCode error=ErrorCode::noError)
+            void _handleError(ErrorCode error=ErrorCode::noError)
             {
                 _errorCount++;
                 _lastError = error != ErrorCode::noError ? error : _parser.errorCode();
@@ -427,7 +427,7 @@ class ModbusClient{
     };
 
     template <typename U>
-    void _parserError(ResponseParser *parser)
+    void _handleError(ResponseParser *parser)
     {   
         ModbusClient<U>* client {static_cast<ModbusClient<U>*>(parser->getExtension())};
         client->_errorCount++;

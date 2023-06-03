@@ -24,7 +24,7 @@ class ModbusRequest{
         template <typename U>
         friend void _parserComplete(ResponseParser *parser);
         template <typename U>
-        friend void _parserError(ResponseParser *parser);
+        friend void _handleError(ResponseParser *parser);
     #endif
 
     public:
