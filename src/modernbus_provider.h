@@ -4,6 +4,9 @@
 
 template <typename> class ModbusClient;
 
+/*
+Abstract Base class of a provide used by modbus client and server.
+*/
 template <typename TStream>
 class ProviderBase{
     template <typename> friend class ModbusClient;
@@ -11,13 +14,17 @@ class ProviderBase{
         ProviderBase(TStream &stream_)
         : _stream{stream_}
         {};
+        // read one byte from stream
         virtual int read() = 0;
+        // write one byte to stream
         virtual size_t write(uint8_t v) = 0;
+        // check if there is something in the buffer
         virtual size_t available() = 0;
-        virtual size_t _calculateTXTime(size_t noOfBytes){return 0;};
-        //inform provider transmission is about to start
+        // Estimate the total time for transmitting the given bytes.
+        virtual uint8_t _calculateTXTime(uint8_t noOfBytes){return 0;};
+        // inform provider transmission is about to start
         virtual void _beginTransmission(){};
-        //inform provider about transmission has ben done
+        // inform provider about transmission has been done
         virtual void _endTransmission(){};
         // inform provider that we have not reached the end of the frame but rx is done
         virtual void _informNotComplete(uint16_t bytes){};
@@ -28,6 +35,18 @@ class ProviderBase{
 
 };
 
+/*
+A simple serial (RS232/UART) provider type.
+
+Can be user for example with SoftSerial or HardwareSerial 
+from Arduino framework.
+
+The stream most provide following interface:
+    - int read()
+    - size_t write(uint8_t v)
+    - size_t available()
+    - int baudRate()
+*/
 template <typename TSerialStream>
 class SerialProvider: public ProviderBase<TSerialStream>{
     template <typename> friend class ModbusClient;
@@ -47,26 +66,36 @@ class SerialProvider: public ProviderBase<TSerialStream>{
         size_t available() override {
             return this->_stream.available();
         }
+
+        uint8_t _calculateTXTime(uint8_t noOfBytes) override {
+            uint16_t bitsTx = 10 * noOfBytes; // 10 bits per byte to send 0,5 + 8 + 1 + 0,5
+            return bitsTx / stream.baudRate();
+        }
 };
 
+/*
+A RS485 Serial provider using a tx pin.
+*/
 template <typename TSerialStream>
 class ProviderRS485: public SerialProvider<TSerialStream>{
     template <typename> friend class ModbusClient;
-    public:
+     public:
+        int16_t txPin {0};
+
         ProviderRS485(TSerialStream &provider, int16_t txPin)
         : SerialProvider<TSerialStream>(provider),
-            _txPin(txPin)
+            txPin(txPin)
         {
-            pinMode(_txPin, OUTPUT);
+            pinMode(txPin, OUTPUT);
         }
         
-        int16_t _txPin {0};
+        
         void _beginTransmission() override {
-            digitalWrite(_txPin, HIGH);
+            digitalWrite(txPin, HIGH);
         };
 
         void _endTransmission() override {
-            digitalWrite(_txPin, LOW);
+            digitalWrite(txPin, LOW);
         };
 };
 
