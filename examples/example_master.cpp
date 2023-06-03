@@ -36,7 +36,7 @@ void setup(){
         for (uint8_t i = 0; i <4; i++){
             sensorT.byteCode[i] = response->payload()[i];
         }
-        Serial.printf("Read Temperature %2.f from slave address %d\n", sensorT.temperature, response->slaveAdress());
+        Serial.printf("Read Temperature %2.f from slave address %d\n", sensorT.temperature, response->slaveAddress());
     });
 
     // start the client
