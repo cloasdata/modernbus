@@ -94,7 +94,7 @@ Client receiving the response is getting acknowledge in form of a echo frame or 
 Here is a [website](https://www.modbustools.com/modbus.html) with more details and good examples.
 
 Here is a modbus server (slave) in only 6 lines of code:
-'''c++
+```c++
 // A minimal modbus server delivering 20 floats on fc 04 from address 00 on HardwareSerial
 #include <Arduino.h>
 #include <HardwareSerial.h>
