@@ -49,6 +49,7 @@ class ModbusRequest{
 
         ModbusRequest& setThrottle(uint16_t time);
         void setExtension(void *ptr);
+        void setTimeout(uint32_t time);
 
     private:
         TinyLinkedList<uint8_t> _requestFrame{};
@@ -57,6 +58,8 @@ class ModbusRequest{
         ResponseHandler _handler;
         ServerResponse _response;
         uint16_t _throttle{0};
+        uint32_t _timeOut{500};
+        uint32_t _requestSent{};
         void* _extensionPtr {nullptr};
         void _validateSwap();
 

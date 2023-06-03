@@ -41,6 +41,11 @@ void ModbusRequest::setExtension(void * ptr){
     _extensionPtr = ptr; 
 }
 
+void ModbusRequest::setTimeout(uint32_t time)
+{
+    _timeOut = time;
+}
+
 void ModbusRequest::_validateSwap(){
     if (_swap && _registerSize < 2){
         assert(false);
