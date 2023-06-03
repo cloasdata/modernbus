@@ -87,7 +87,7 @@ class ModbusClient{
         The server takes a copy of the provided request, so that user does not need to manage the array further.
         User can modify the request, by receiving the returned reference.
 
-        The passed request array is not validated for fullfilling any modbus standard.
+        The passed request array is not validated for fulfilling any modbus standard.
         So user could also implement its very own frame.
 
         Supported Functioncodes are:
@@ -159,7 +159,7 @@ class ModbusClient{
 
         // setter
         /*
-        Sets minimal dealy between requests
+        Sets minimal delay between requests
         */
         void setMinDelay(uint16_t millis_){_minDelay=millis_;};
         
@@ -173,7 +173,7 @@ class ModbusClient{
         Default is no error handler.
         If set each error will be handled with this handler.
         The handler is called when a valid request is made.
-        It wont be called as long there are now requests.
+        It wont be called as long there are no requests.
         */
         void setOnError(ErrorHandler handler){
             _onError = handler;
@@ -182,7 +182,7 @@ class ModbusClient{
         /*
         Sets function code validation.
         When true then the server response is checked against the client request
-        If functioncode does not match it will call the error handler if available.
+        If function code does not match it will call the error handler if available.
         */
        void setFunctionCodeValidation(bool v){
             _needsValidation = v;
@@ -195,6 +195,7 @@ class ModbusClient{
         uint32_t errorCount(){return _errorCount;};
         uint32_t requestCount(){return _requestCount;};
         uint32_t completeCount(){return _completeCount;};
+        uint32_t  timeoutCount(){return _timeoutCount;};
         size_t dataLimit(){return _parser.byteCountLimit();};
  
     private:
@@ -214,9 +215,9 @@ class ModbusClient{
         uint32_t _requestCount{0};
         uint32_t _completeCount{0};
         uint32_t _errorCount{0};
+        uint32_t _timeoutCount{0};
         ErrorCode _lastError{ErrorCode::noError};
         bool _isRunning = false;
-        unsigned long _lastTX{0};
 
         uint16_t _deviceDelay{200};
         uint16_t _minDelay{40};
@@ -237,7 +238,6 @@ class ModbusClient{
         void _beginTransmission()
         {   
             while(_provider->available()) _provider->read(); // clean buffer
-            _lastTX = millis();
             _provider->_beginTransmission();
 
             _mainTask.setCallback(
@@ -268,12 +268,12 @@ class ModbusClient{
             uint16_t framesize = _calcFrameSize(_currentRequest->requestSize(), 2);
             uint16_t delayBy = _provider->_calculateTXTime(framesize);
             delayBy += _deviceDelay;
+            _currentRequest->_requestSent = millis();
 
             _mainTask.setCallback(
                 [this](){ _retrieveResponse(); }
                 );
             _mainTask.delay(delayBy);
-            _lastTX = millis();
         };
 
 
@@ -285,15 +285,22 @@ class ModbusClient{
                 _parser.parse(token);
             }
 
-            if (!_parser.isComplete()){
+            if (!_parser.isComplete() && !_parser.isError()){
                 // Inform provider provider
                 _provider->_informNotComplete(_parser.dataToReceive());
+                
+                // wait further until timeout
+                uint32_t sinceSent = millis() - _currentRequest->_requestSent;
+                if (sinceSent < _currentRequest->_timeOut){
+                    mainTask.setCallback([this](){ _retrieveResponse();});
+                    _mainTask.delay(_currentRequest->_timeOut - sinceSent);
+                    return;
+                } else { // timeout
+                    _timeoutCount++;
+                }
             }
-            // next request. We do not wait for anything else.
-            _mainTask.setCallback(
-                [this](){ _dispatchRequest(); }
-                );
-                //_mainTask.forceNextIteration();
+            _mainTask.setCallback([this](){ _dispatchRequest();});
+
         };
         
         // Request handling
