@@ -62,8 +62,9 @@ class ModbusClient{
         }
 
         ~ModbusClient(){
+            _mainTask.abort();
+            _scheduler->deleteTask(_mainTask);
             _free();
-            
             };
 
         /*
@@ -174,6 +175,9 @@ class ModbusClient{
         If set each error will be handled with this handler.
         The handler is called when a valid request is made.
         It wont be called as long there are no requests.
+
+        Signature of ErrorHandler:
+        void(ServerResponse *response, ErrorCode errorCode)
         */
         void setOnError(ErrorHandler handler){
             _onError = handler;
@@ -290,7 +294,13 @@ class ModbusClient{
             if (!_parser.isComplete() && !_parser.isError()){
                 // Inform provider provider
                 _provider->_informNotComplete(_parser.dataToReceive());
-                
+                _handleTimeOut();
+            }
+            _mainTask.setCallback([this](){ _dispatchRequest();});
+
+        };
+
+        void _handleTimeOut(){
                 // wait further until timeout
                 uint32_t sinceSent = millis() - _currentRequest->_requestSent;
                 if (sinceSent < _currentRequest->_timeOut){
@@ -301,11 +311,9 @@ class ModbusClient{
                     _timeoutCount++;
                     _errorCount++;
                     _lastErrorRequest = _currentRequest;
+                    _parserError(ErrorCode::slaveDeviceFailure);
                 }
-            }
-            _mainTask.setCallback([this](){ _dispatchRequest();});
-
-        };
+        }
         
         // Request handling
 
