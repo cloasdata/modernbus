@@ -197,6 +197,7 @@ class ModbusClient{
         uint32_t completeCount(){return _completeCount;};
         uint32_t  timeoutCount(){return _timeoutCount;};
         size_t dataLimit(){return _parser.byteCountLimit();};
+        ModbusRequest& lastErrorRequest(){return *_lastErrorRequest;};
  
     private:
         T *_provider;
@@ -205,6 +206,7 @@ class ModbusClient{
         ResponseParser _parser;
 
         ModbusRequest *_currentRequest = nullptr;
+        ModbusRequest *_lastErrorRequest = nullptr;
         
         TinyLinkedList<ModbusRequest*> _requests;
         ModbusRequest *_singleRequest = nullptr;
@@ -297,6 +299,8 @@ class ModbusClient{
                     return;
                 } else { // timeout
                     _timeoutCount++;
+                    _errorCount++;
+                    _lastErrorRequest = _currentRequest;
                 }
             }
             _mainTask.setCallback([this](){ _dispatchRequest();});
@@ -372,6 +376,7 @@ class ModbusClient{
             {
                 _errorCount++;
                 _lastError = error != ErrorCode::noError ? error : _parser.errorCode();
+                _lastErrorRequest = _currentRequest;
                 if ( _onError != nullptr){
                     _onError(&_currentRequest->response(), _lastError);
                 }
@@ -393,6 +398,9 @@ class ModbusClient{
 
 };
 
+// Callback without functional. Avoiding lambda captures by passing a glue function.
+// Makes use of void* pointer through parser extension interface.
+// At the moment not explicit tested. May not work. June 2023
 #ifndef STD_FUNCTIONAL
     template <typename U>
     void _parserComplete(ResponseParser *parser)
@@ -416,6 +424,7 @@ class ModbusClient{
         ModbusClient<U>* client {static_cast<ModbusClient<U>*>(parser->getExtension())};
         client->_errorCount++;
         client->_lastError = parser->errorCode();
+        client->_lastErrorRequest = client->_currentRequest;
         if ( client->_onError != nullptr){
             client->_onError(client->_currentRequest, client->_lastError);
         }
