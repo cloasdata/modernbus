@@ -34,6 +34,9 @@ class MockStream{
 
     int32_t _readDelay{0};
     int32_t _writeDelay{0};
+    uint8_t _unavailableAfter{0};
+    int32_t _unavailableFor{0};
+    int32_t _lastPoll{};
     
     public:
     MockStream(size_t buffSize = 200)
@@ -101,6 +104,15 @@ class MockStream{
 
     size_t available(){
         size_t res = _readEnd - _readCursor;
+        size_t rec = _readCursor - _currentRead.arrPtr;
+        if ( _unavailableAfter && rec >= _unavailableAfter){
+            Serial.print("unvailable\n");
+            if ( (millis()-_lastPoll) < _unavailableFor){
+                Serial.print("return 0\n");
+                return 0;
+            }
+        }
+        _lastPoll = millis();
         if ( res == 0){
             if (_autoReset){
                 nextData();
@@ -151,6 +163,11 @@ class MockStream{
 
     void setReadDelay(int32_t millis_){
         _readDelay = millis_;
+    }
+
+    void setUnavailable(uint8_t afterBytes, uint32_t forMillis){
+        _unavailableAfter=afterBytes;
+        _unavailableFor=forMillis;
     }
 
 };
