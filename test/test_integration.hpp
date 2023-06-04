@@ -71,7 +71,29 @@ void GivenWriteRequest_WhenBothUsingCrosslink_ThenNoError(){
     server.start();
     
 
-    while(client.completeCount() < 1){
+    while(client.completeCount() < 10){
+        scheduler.execute();
+    }
+    assert(client.isRunning());
+    assert(server.isRunning());
+
+}
+
+void GivenRequest04_WhenWithMap_ThenNoError(){
+    ModbusClient<CrossLinkProvider> client{&scheduler, &clientProvider};
+    ModbusServer<CrossLinkProvider> server{&scheduler, &serverProvider, 0x01};
+    
+    client.poll(ReadRequest04, sizeof(ReadRequest04),[](ServerResponse *response){
+        assert(response->payload()[1]);
+    });   
+    
+    server.responseTo(0x04, 0x0001).with(Payload04, sizeof(Payload04), 1);
+    
+    client.start();
+    server.start();
+    
+
+    while(client.completeCount() < 10){
         scheduler.execute();
     }
     assert(client.isRunning());
@@ -81,11 +103,13 @@ void GivenWriteRequest_WhenBothUsingCrosslink_ThenNoError(){
 
 void runIntegrationTests(){
     Serial.print("\n-- Testing integration of Modernbus --\n");
-    //GivenClientAndServer_WhenBothUsingCrosslink_ThenNoError();
+    GivenClientAndServer_WhenBothUsingCrosslink_ThenNoError();
     Serial.print(".");
-    //GivenRequest_WhenBothUsingCrosslink_ThenNoError();
+    GivenRequest_WhenBothUsingCrosslink_ThenNoError();
     Serial.print(".");
     GivenWriteRequest_WhenBothUsingCrosslink_ThenNoError();
+    Serial.print(".");
+    GivenRequest04_WhenWithMap_ThenNoError();
     Serial.print(".");
     Serial.print("\n-- Integration Test Done --\n");
 }

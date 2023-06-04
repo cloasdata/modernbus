@@ -117,7 +117,6 @@ class ResponseBase{
             _crc = 0xFFFF;
             _size=5;
             _sent = false;
-
         }
 
         void _sendException(uint8_t exceptionCode){
@@ -240,7 +239,7 @@ class ModbusResponse: public ResponseBase<T>{
             if (!this->_sent && _mapping){
                 _handleMapping();
             }
-            _reset();
+            this->_reset();
         }
 
         void _handleMapping(){
@@ -257,12 +256,6 @@ class ModbusResponse: public ResponseBase<T>{
             } else {
                 this->sendException(ErrorCode::illegalDataValue);
             }
-            this->_sent = true;
-        }
-
-        void _reset(){
-            //this->_reset();
-            //_quantity = 0;
         }
 
 };
