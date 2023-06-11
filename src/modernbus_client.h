@@ -200,6 +200,8 @@ class ModbusClient{
         uint32_t requestCount(){return _requestCount;};
         uint32_t completeCount(){return _completeCount;};
         uint32_t  timeoutCount(){return _timeoutCount;};
+        uint32_t dataSent()const{return _dataSent;};
+        uint32_t dataReceived()const{return _dataReceived;};
         size_t dataLimit(){return _parser.byteCountLimit();};
         ModbusRequest& lastErrorRequest(){return *_lastErrorRequest;};
  
@@ -222,6 +224,9 @@ class ModbusClient{
         uint32_t _completeCount{0};
         uint32_t _errorCount{0};
         uint32_t _timeoutCount{0};
+        uint32_t _dataSent{0};
+        uint32_t _dataReceived{0};
+
         ErrorCode _lastError{ErrorCode::noError};
         bool _isRunning = false;
 
@@ -257,6 +262,7 @@ class ModbusClient{
             while(_currentRequest->_requestFrame.iter()){
                 uint8_t token = _currentRequest->_requestFrame.iter.next();
                 _provider->write(token);
+                _dataSent++;
             }
             _requestCount++;
             _mainTask.setCallback(
@@ -289,6 +295,7 @@ class ModbusClient{
             while (!_parser.isComplete() && !_parser.isError() && _provider->available()){
                 uint8_t token = _provider->read();
                 _parser.parse(token);
+                _dataReceived++;
             }
 
             if (!_parser.isComplete() && !_parser.isError()){
