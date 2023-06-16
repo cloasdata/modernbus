@@ -230,7 +230,6 @@ class ModbusClient{
         ErrorCode _lastError{ErrorCode::noError};
         bool _isRunning = false;
 
-        uint16_t _deviceDelay{200};
         uint16_t _minDelay{40};
 
         bool _needsValidation;
@@ -254,7 +253,8 @@ class ModbusClient{
             _mainTask.setCallback(
                 [this](){ _transmitRequest();}
                 );
-            _mainTask.delay(_provider->_calculateTXTime(1)); // delay by one byte
+            //_mainTask.delay(_provider->_calculateTXTime(1)); // delay by one byte
+            _mainTask.delay(1); // delay by one byte
         };
 
         void _transmitRequest()
@@ -270,16 +270,18 @@ class ModbusClient{
                 );
 
             // delay until all bytes send
-            _mainTask.delay(_provider->_calculateTXTime(9)); // request frame have 8 bytes + 1 silent
+            // this could be already to fast. So we add 1 ms additional delay so that uart can finish with ease.
+            uint16_t timeUntilEnd = _provider->_calculateTXTime(_currentRequest->_requestFrame.size()) + 1;
+            _mainTask.delay(timeUntilEnd);
 
         };
 
         void _endTransmission(){
             _provider->_endTransmission();
             // calc delay
-            uint16_t framesize = _calcFrameSize(_currentRequest->requestSize(), 2);
+            uint16_t framesize = _calcFrameSize(_currentRequest->_registerQuantity, 2);
             uint16_t delayBy = _provider->_calculateTXTime(framesize);
-            delayBy += _deviceDelay;
+            delayBy += _currentRequest->deviceDelay();
             _currentRequest->_requestSent = millis();
 
             _mainTask.setCallback(
@@ -308,6 +310,7 @@ class ModbusClient{
                 }
             }
             _mainTask.setCallback([this](){ _dispatchRequest();});
+            _mainTask.delay(_minDelay);
 
         };
 
@@ -422,7 +425,7 @@ class ModbusClient{
 
         uint16_t _calcFrameSize(uint16_t noOfRegister, uint16_t registerSize)
         {
-            return 2 + noOfRegister * registerSize + 2;
+            return noOfRegister * registerSize + 7;
         };
 
 };

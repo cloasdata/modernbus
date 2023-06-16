@@ -1,6 +1,9 @@
 #ifndef MODBUS_STREAMS_H
 #define MODBUS_STREAMS_H
 
+#ifndef MIN_TX_TIME
+#define MIN_TX_TIME 1
+#endif
 
 template <typename> class ModbusClient;
 
@@ -69,7 +72,7 @@ class SerialProvider: public ProviderBase<TSerialStream>{
 
         uint8_t _calculateTXTime(uint8_t noOfBytes) override {
             uint16_t bitsTx = 10 * noOfBytes; // 10 bits per byte to send 0,5 + 8 + 1 + 0,5
-            return bitsTx / this->_stream.baudRate();
+            return (bitsTx * 1000) / this->_stream.baudRate();
         }
 };
 
@@ -80,9 +83,9 @@ template <typename TSerialStream>
 class ProviderRS485: public SerialProvider<TSerialStream>{
     template <typename> friend class ModbusClient;
      public:
-        int16_t txPin {0};
+        uint8_t txPin;
 
-        ProviderRS485(TSerialStream &provider, int16_t txPin)
+        ProviderRS485(TSerialStream &provider, uint8_t txPin)
         : SerialProvider<TSerialStream>(provider),
             txPin(txPin)
         {
@@ -95,7 +98,7 @@ class ProviderRS485: public SerialProvider<TSerialStream>{
         };
 
         void _endTransmission() override {
-            digitalWrite(txPin, LOW);
+            digitalWrite(txPin, !digitalRead(txPin));
         };
 };
 

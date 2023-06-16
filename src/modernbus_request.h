@@ -44,12 +44,14 @@ class ModbusRequest{
         uint16_t throttle() const;
         void* getExtension();
         ResponseHandler getHandler() const;
+        uint16_t deviceDelay() const;
 
         //Setter
 
         ModbusRequest& setThrottle(uint16_t time);
         void setExtension(void *ptr);
-        void setTimeout(uint32_t time);
+        ModbusRequest& setTimeout(uint32_t time);
+        ModbusRequest& setDeviceDelay(uint16_t millis_);
 
     private:
         TinyLinkedList<uint8_t> _requestFrame{};
@@ -62,10 +64,13 @@ class ModbusRequest{
         uint32_t _requestSent{};
         void* _extensionPtr {nullptr};
         void _validateSwap();
+        void _determineQuantity();
 
         const uint8_t _slaveAddress;
         const uint8_t _functionCode;
         const uint16_t _address;
+        uint16_t _deviceDelay{30};
+        uint16_t _registerQuantity{1};
 };
 
 

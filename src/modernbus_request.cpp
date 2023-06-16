@@ -12,6 +12,7 @@ ModbusRequest::ModbusRequest(uint8_t *request, uint16_t requestSize, bool swap, 
     _address{(uint16_t)((request[2] << 8) | request[3])}
 {
     _validateSwap();
+    _determineQuantity();
 }
 
 ModbusRequest::~ModbusRequest(){
@@ -41,14 +42,30 @@ void ModbusRequest::setExtension(void * ptr){
     _extensionPtr = ptr; 
 }
 
-void ModbusRequest::setTimeout(uint32_t time)
+ModbusRequest& ModbusRequest::setTimeout(uint32_t time)
 {
     _timeOut = time;
+    return *this;
+}
+
+ ModbusRequest& ModbusRequest::setDeviceDelay(uint16_t millis_)
+{
+    _deviceDelay = millis_;
+    return *this;
 }
 
 void ModbusRequest::_validateSwap(){
     if (_swap && _registerSize < 2){
         assert(false);
+    }
+}
+
+void ModbusRequest::_determineQuantity()
+{
+    if (_functionCode < 5 || _functionCode > 6){
+        _registerQuantity = _requestFrame.get(4) << 8 | _requestFrame.get(5);
+    } else {
+        _registerQuantity = 1;
     }
 }
 
@@ -78,4 +95,9 @@ void *ModbusRequest::getExtension(){
 
 ResponseHandler ModbusRequest::getHandler() const{
     return _handler;
+}
+
+uint16_t ModbusRequest::deviceDelay() const
+{
+    return _deviceDelay;
 }
