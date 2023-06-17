@@ -159,10 +159,6 @@ class ModbusClient{
         };
 
         // setter
-        /*
-        Sets minimal delay between requests
-        */
-        void setMinDelay(uint16_t millis_){_minDelay=millis_;};
         
         /*
         Sets maximum data to receive. Avoids heap corruption etc.
@@ -230,7 +226,6 @@ class ModbusClient{
         ErrorCode _lastError{ErrorCode::noError};
         bool _isRunning = false;
 
-        uint16_t _minDelay{40};
 
         bool _needsValidation;
 
@@ -310,7 +305,6 @@ class ModbusClient{
                 }
             }
             _mainTask.setCallback([this](){ _dispatchRequest();});
-            _mainTask.delay(_minDelay);
 
         };
 
@@ -362,7 +356,7 @@ class ModbusClient{
             _setupParser();
             _mainTask.setCallback([this]()
                                 { _beginTransmission(); });
-            //_mainTask.forceNextIteration();
+            _currentRequest->_requestSent
             _mainTask.delay(_currentRequest->throttle());
         };
         
