@@ -226,7 +226,6 @@ class ModbusClient{
         ErrorCode _lastError{ErrorCode::noError};
         bool _isRunning = false;
 
-
         bool _needsValidation;
 
         //mem

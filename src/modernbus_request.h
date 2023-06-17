@@ -48,7 +48,7 @@ class ModbusRequest{
 
         //Setter
 
-        ModbusRequest& setThrottle(uint16_t time);
+        ModbusRequest& every(uint16_t time);
         void setExtension(void *ptr);
         ModbusRequest& setTimeout(uint32_t time);
         ModbusRequest& setDeviceDelay(uint16_t millis_);

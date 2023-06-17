@@ -33,7 +33,7 @@ uint16_t ModbusRequest::address() const{
     return _address;
 }
 
- ModbusRequest& ModbusRequest::setThrottle(uint16_t time_){
+ ModbusRequest& ModbusRequest::every(uint16_t time_){
             _throttle = time_;
             return *this;
             }
