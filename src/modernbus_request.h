@@ -62,6 +62,7 @@ class ModbusRequest{
         uint16_t _throttle{0};
         uint32_t _timeOut{500};
         uint32_t _requestSent{};
+        uint32_t _requestStarted{};
         void* _extensionPtr {nullptr};
         void _validateSwap();
         void _determineQuantity();

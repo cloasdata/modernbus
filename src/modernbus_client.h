@@ -340,7 +340,7 @@ class ModbusClient{
             if (_singleRequestQueue.size()){
                 _currentRequest = _singleRequestQueue.pop();
                 _doRequest();
-            } else if (_requests.size()){ 
+            } else if (_requests.size()){
                 _currentRequest = _requests.iter.loopNext();
                 _doRequest();
                 return;
@@ -351,12 +351,16 @@ class ModbusClient{
 
 
         void _doRequest()
-        {
+        {   
+            int32_t delay_ =_currentRequest->throttle() - (millis() - _currentRequest->_requestStarted) ;
             _setupParser();
             _mainTask.setCallback([this]()
                                 { _beginTransmission(); });
-            _currentRequest->_requestSent
-            _mainTask.delay(_currentRequest->throttle());
+
+            if (delay_ > 0){
+                _mainTask.delay(delay_);
+            }
+            _currentRequest->_requestStarted = millis();
         };
         
         
