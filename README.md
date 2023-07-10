@@ -53,6 +53,7 @@
             <li><a href="#master-client">Master Client</a></li>
         </ul>
     </li>
+    <li><a href="#implementation-details">Roadmap</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -169,7 +170,7 @@ git clone https://github.com/cloasdata/modernbus.git
 #### Platformio
 Add to platformio.ini or install via gui
 ```
-    seimen/modernbus@0.3.2
+    seimen/modernbus@^0.5.2
 ```
 
 Dependencies required (will be installed by platformio)
@@ -365,6 +366,41 @@ You also can hook up in the way client and server are handling exception. That c
 
     // ...
 ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Implementation Details
+### Timing
+One crucial thing on modbus  is timing. We send a request and wait for response. So there are plenty of timings, were we need to wait but do no want to block the cpu. 
+
+* Flow Control Enable 
+* (wait) 
+* Write Request to serial buffer 
+* (wait for UART to empty) 
+* Flow Control Disable 
+* (wait for slave response)
+* Parser Response
+* Let user do stuff
+* (wait for next request)
+
+modernbus uses a deterministic way to handle all the waits. But this has some pitfalls.
+In general it is not known how long the slave may take to response. Normally around 30 ms. So user can specify this timing by using the setDeviceDelay method on the request object. Sometimes supplier do specify this timing in detail.
+
+The speed of UARTS may vary by about 5%. Meaning that you could be 10% too fast or too slow. To overcome this non deterministic behavior, the provider will be informed by the client that it was not able finish. The user now can make are derived provider, in which he is able to react on that delay. For example making the tx time calculation of the provider slower or faster if required.
+
+Finally the poll timing is not guaranteed. This means whenever using the method request.every(100) this repeat the request every 100 ms at minimum. 
+Depending on other pending requests this could be also a lot longer, because the client will do one request by another.  
+
+<figure>
+    <img src=".logo/TX request timing.png" alt="timing" height="400">
+    <figcaption> Picture showing TX enable (flow control) pin with data transmission of a 8 byte long request</figCaption>
+</figure>
+
+<figure>
+    <img src=".logo/silence after response.png" alt="timing" height="400">
+    <figcaption>Picture 2 showing a 12 ms "silent time" after the response was received from slave (yellow spike is triggered when client starts to parse).</figCaption>
+</figure>
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Roadmap
